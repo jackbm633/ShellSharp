@@ -1,10 +1,14 @@
 ﻿namespace ShellSharp
 {
-    internal class Program
+    internal static class Program
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello, World!");
+            Console.Write("$ ");
+            Console.Out.Flush();
+
+            // Wait for user input
+            Console.ReadLine();
         }
     }
 }
