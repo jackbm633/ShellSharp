@@ -1,14 +1,5 @@
-﻿namespace ShellSharp
-{
-    internal static class Program
-    {
-        static void Main(string[] args)
-        {
-            Console.Write("$ ");
-            Console.Out.Flush();
+﻿Console.Write("$ ");
+await Console.Out.FlushAsync();
 
-            // Wait for user input
-            Console.ReadLine();
-        }
-    }
-}
+// Wait for user input
+Console.ReadLine();
