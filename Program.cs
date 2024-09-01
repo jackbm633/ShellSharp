@@ -1,7 +1,8 @@
 ﻿using System.Text.RegularExpressions;
 
 int lastExitCode = 0;
-Dictionary<string, Action<IEnumerable<string>>> builtins = new() { { "exit", Exit }, { "echo", Echo } };
+Dictionary<string, Action<IEnumerable<string>>> builtins = [];
+builtins = new() { { "exit", Exit }, { "echo", Echo }, { "type", TypeCommand } };
 
 while (true)
 {
@@ -41,6 +42,27 @@ void Echo(IEnumerable<string> commandInput)
 {
     Console.WriteLine(string.Join(" ", commandInput.Skip(1)));
     lastExitCode = 0;
+}
+
+
+void TypeCommand(IEnumerable<string> commandInput)
+{
+    if (commandInput.Skip(1).Any())
+    {
+        var commandName = commandInput.Skip(1).First();        
+        if (builtins.ContainsKey(commandName))
+        {
+            Console.WriteLine($"{commandName} is a shell builtin");
+        }
+        else
+        {
+            Console.WriteLine($"{commandName}: not found");
+        }
+    }
+    else
+    {
+        lastExitCode = 1;
+    }
 }
 
 IEnumerable<string> SplitLine(string line)
