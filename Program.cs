@@ -1,5 +1,7 @@
-﻿int lastExitCode = 0;
-Dictionary<string, Action<IEnumerable<string>>> builtins = new() { { "exit", Exit } };
+﻿using System.Text.RegularExpressions;
+
+int lastExitCode = 0;
+Dictionary<string, Action<IEnumerable<string>>> builtins = new() { { "exit", Exit }, { "echo", Echo } };
 
 while (true)
 {
@@ -7,7 +9,7 @@ while (true)
     await Console.Out.FlushAsync();
 
     // Wait for user input
-    var command = Console.ReadLine()!.TrimEnd().Split(" ").Where(s => s.Length > 0);
+    var command = SplitLine(Console.ReadLine()!);
     
     if (command.Any())
     {
@@ -15,7 +17,10 @@ while (true)
         {
             builtins[command.First()].Invoke(command);
         }
-        Console.WriteLine($"{command.First()}: command not found");
+        else
+        {
+            Console.WriteLine($"{command.First()}: command not found");
+        }
     }
 }
 
@@ -30,4 +35,25 @@ void Exit(IEnumerable<string> commandInput)
     {
         Environment.Exit(lastExitCode);
     }
+}
+
+void Echo(IEnumerable<string> commandInput)
+{
+    Console.WriteLine(string.Join(" ", commandInput.Skip(1)));
+    lastExitCode = 0;
+}
+
+IEnumerable<string> SplitLine(string line)
+{
+    List<string> result = [];
+    string pattern = "\"([^\"\\\\]*(?:\\\\.[^\"\\\\]*)*)\"|'([^'\\\\]*(?:\\\\.[^'\\\\]*)*)'|[^\\s]+";
+    result.AddRange(Regex.Matches(line, pattern).Select(match =>
+    {
+        if (match.Groups[1].Value.Length > 0)
+        {
+            return match.Groups[1].Value;
+        }
+        return match.Groups[0].Value;
+    }));
+    return result;
 }
