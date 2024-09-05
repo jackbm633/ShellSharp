@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 
 int lastExitCode = 0;
 Dictionary<string, Action<IEnumerable<string>>> builtins = [];
@@ -56,13 +57,46 @@ void TypeCommand(IEnumerable<string> commandInput)
         }
         else
         {
-            Console.WriteLine($"{commandName}: not found");
+            string? commandPath = GetCommandPath(commandName);
+            if (commandPath is not null)
+            {
+                Console.WriteLine($"{commandName} is {commandPath}"); 
+            }
+            else
+            {
+                Console.WriteLine($"{commandName}: not found");
+            }
         }
     }
     else
     {
         lastExitCode = 1;
     }
+}
+
+string? GetCommandPath(string commandName)
+{
+    string[] pathexts;
+    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+    {
+        pathexts = Environment.GetEnvironmentVariable("PATHEXT")!.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries);
+    }
+    else
+    {
+        pathexts = [""];
+    }
+    string[] path = Environment.GetEnvironmentVariable("PATH")!.Split(Path.PathSeparator);
+    foreach (string pathItem in path)
+    {
+        foreach (string pathext in pathexts)
+        {
+            if (File.Exists(Path.Join(pathItem, commandName + pathext)))
+            {
+                return Path.Join(pathItem, commandName + pathext);
+            }
+        }
+    }
+    return null;
 }
 
 IEnumerable<string> SplitLine(string line)
