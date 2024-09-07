@@ -1,17 +1,21 @@
 using System.Runtime.InteropServices;
 using System.Globalization;
-using System.Linq;
 
 namespace ShellSharp
 {
+    /// <summary>
+    /// Contains built-in shell commands.
+    /// </summary>
     public static class BuiltIns
     {
+        private static readonly Dictionary<string, Func<IEnumerable<string>, int, int>> builtInsList = 
+            new() { { "exit", Exit }, { "echo", Echo }, { "type", TypeCommand } };
 
-
-        private static readonly Dictionary<string, Func<IEnumerable<string>, int, int>> builtInsList = new() { { "exit", Exit }, { "echo", Echo }, { "type", TypeCommand } };
-
-        public static Dictionary<string, Func<IEnumerable<string>, int, int>> BuiltInsList { get => builtInsList; }
-
+        /// <summary>
+        /// Getter for the list of builtins.
+        /// </summary>
+        public static Dictionary<string, Func<IEnumerable<string>, int, int>> 
+            BuiltInsList { get => builtInsList; }
         public static int Exit(IEnumerable<string> commandInput, int globalExitCode)
         {
             if (commandInput.Count() > 1 && byte.TryParse(commandInput.ElementAt(1), CultureInfo.CurrentCulture, out byte exitcode))
@@ -56,19 +60,19 @@ namespace ShellSharp
             }
         }
 
-        static string? GetCommandPath(string commandName)
+        public static string? GetCommandPath(string commandName)
         {
             string[] pathexts;
-            pathexts = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? Environment.GetEnvironmentVariable("PATHEXT")!.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries) : [""];
+            pathexts = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? 
+                Environment.GetEnvironmentVariable("PATHEXT")!
+                .Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries) : [""];
             string[] path = Environment.GetEnvironmentVariable("PATH")!.Split(Path.PathSeparator);
-            foreach (var (pathItem, pathext) in from string pathItem in path
-                                                let pathext = pathexts.First(pathext => File.Exists(Path.Join(pathItem, commandName + pathext)))
-                                                select (pathItem, pathext))
-            {
-                return Path.Join(pathItem, commandName + pathext);
-            }
-
-            return null;
+            string? result = (from pathItem in path
+              from pathext in pathexts
+              let fullPath = Path.Join(pathItem, commandName + pathext)
+              where File.Exists(fullPath)
+              select fullPath).FirstOrDefault();
+            return result;
         }
 
         
